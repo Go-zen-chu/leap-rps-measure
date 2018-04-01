@@ -16,7 +16,7 @@ class RpsListener(Leap.Listener):
         print "Initialized"
         self.logger = getLogger(__name__)
         self.logger.setLevel(DEBUG)
-        fh = FileHandler(filename=__name__ + ".log")
+        fh = FileHandler(filename=__name__ + ".tsv")
         fm = Formatter("%(asctime)s\t%(message)s")
         fh.setLevel(DEBUG)
         fh.setFormatter(fm)

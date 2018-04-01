@@ -1,3 +1,4 @@
+*.tsv
 env/
 lib/
 ### https://raw.github.com/github/gitignore/ab477818977684f0f6ff370da9508e08944bc8c8/Global/macOS.gitignore
