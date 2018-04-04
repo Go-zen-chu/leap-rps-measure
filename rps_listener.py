@@ -22,8 +22,16 @@ class RpsListener(Leap.Listener):
         fh.setFormatter(fm)
         self.logger.addHandler(fh)
         self.logger.propagate = False
-        data_col = "\t".join(["hand_type","hand_id","hand_confidence","palm_x","palm_y","palm_z",
-            "thumb_len","thumb_width","index_len","index_width","middle_len","middle_width","ring_len","ring_width","pinky_len","pinky_width"])
+        # hand data = 6
+        data_types = ["hand_type","hand_id","hand_confidence","palm_x","palm_y","palm_z"]
+        # fingers = 5 * (2 + 12) = 70
+        for f in self.finger_names:
+            # length and width are decided when your hand is first detected (static)
+            data_types.extend(["{}_{}".format(f, t) for t in ["len", "width"]])
+            # finger bones
+            for b in range(0, 4):
+                data_types.extend(["{}_{}_{}".format(f, b, t) for t in ["x","y","z"]])
+        data_col = "\t".join(data_types)
         self.logger.info(data_col)
 
     def on_connect(self, controller):
@@ -38,7 +46,7 @@ class RpsListener(Leap.Listener):
 
     def log_hand_data(self, hand, finger_data):
         # fast array initializaion
-        d = [None] * 16
+        d = [None] * 76
         d[0] = "L" if hand.is_left else "R"
         d[1] = hand.id
         d[2] = hand.confidence
@@ -50,12 +58,21 @@ class RpsListener(Leap.Listener):
         idx = 6
         for f in finger_data:
             if f is None:
-                idx += 2
+                idx += 14
                 continue
             d[idx] = f.length
             idx += 1
             d[idx] = f.width
             idx += 1
+            for b in range(0, 4):
+                bone = f.bone(b)
+                d[idx] = bone.center.x
+                idx += 1
+                d[idx] = bone.center.y
+                idx += 1
+                d[idx] = bone.center.z
+                idx += 1
+
         # map to convert to str array
         self.logger.info("\t".join(map(str,d)))
 
@@ -73,19 +90,21 @@ class RpsListener(Leap.Listener):
                 handType, hand.id, hand.palm_position, hand.confidence)
 
             # Get the hand's normal vector and direction
-            normal = hand.palm_normal
-            direction = hand.direction
+            # normal = hand.palm_normal
+            # direction = hand.direction
 
             # Calculate the hand's pitch, roll, and yaw angles
             # print "  pitch: %f degrees, roll: %f degrees, yaw: %f degrees" % (
             #     direction.pitch * Leap.RAD_TO_DEG,
             #     normal.roll * Leap.RAD_TO_DEG,
             #     direction.yaw * Leap.RAD_TO_DEG)
-
+            hand_center = hand.palm_position
             # Get fingers
             finger_data = [None] * 5
             for finger in hand.fingers:
                 finger_data[finger.type] = finger
+
+                tip_palm_dist = finger.bone(3).center -
                 # print "    %s finger, id: %d, length: %fmm, width: %fmm" % (
                 #     self.finger_names[finger.type],
                 #     finger.id,
@@ -99,6 +118,9 @@ class RpsListener(Leap.Listener):
                 #         bone.prev_joint,
                 #         bone.next_joint,
                 #         bone.direction)
+                meta_v = finger.bone(0).center
+                dist_v = finger.bone(3).center
+                print("{} : distance {}".format(self.finger_names[finger.type], meta_v.distance_to(dist_v)))
 
             # log data for analysis
             self.log_hand_data(hand, finger_data)
