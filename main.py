@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 import sys, thread, time
 sys.path.insert(0, "./leap") # load leap motion lib
 

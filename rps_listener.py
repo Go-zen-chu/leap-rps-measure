@@ -1,15 +1,20 @@
 #!/usr/bin/env python
-import sys, thread, time
+# -*- coding: utf-8 -*-
+import sys
 sys.path.insert(0, "./leap") # load leap motion lib
+import thread
+import time
+import math
 
 import Leap
-from Leap import CircleGesture, KeyTapGesture, ScreenTapGesture, SwipeGesture
+from Leap import Vector
 from logging import getLogger, FileHandler, Formatter, DEBUG
 
 class RpsListener(Leap.Listener):
     finger_names = ['Thumb', 'Index', 'Middle', 'Ring', 'Pinky']
     bone_names = ['Metacarpal', 'Proximal', 'Intermediate', 'Distal']
     state_names = ['STATE_INVALID', 'STATE_START', 'STATE_UPDATE', 'STATE_END']
+    origin = Vector(0,0,0)
     logger = None
 
     def on_init(self, controller):
@@ -99,12 +104,18 @@ class RpsListener(Leap.Listener):
             #     normal.roll * Leap.RAD_TO_DEG,
             #     direction.yaw * Leap.RAD_TO_DEG)
             hand_center = hand.palm_position
+            hand_direction = hand.direction
+            # hand_center_len = hand_center.distance_to(self.origin)
             # Get fingers
             finger_data = [None] * 5
+            tip_dists = [0] * 5
+            tip_angles = [0] * 5
             for finger in hand.fingers:
                 finger_data[finger.type] = finger
-
-                tip_palm_dist = finger.bone(3).center -
+                # dist between center and finger tip
+                tip_palm_dist = finger.bone(3).center.distance_to(hand_center)
+                tip_dists[finger.type] = tip_palm_dist
+                tip_angles[finger.type] = finger.bone(3).direction.angle_to(hand_direction) * 180 / math.pi
                 # print "    %s finger, id: %d, length: %fmm, width: %fmm" % (
                 #     self.finger_names[finger.type],
                 #     finger.id,
@@ -118,9 +129,16 @@ class RpsListener(Leap.Listener):
                 #         bone.prev_joint,
                 #         bone.next_joint,
                 #         bone.direction)
-                meta_v = finger.bone(0).center
-                dist_v = finger.bone(3).center
-                print("{} : distance {}".format(self.finger_names[finger.type], meta_v.distance_to(dist_v)))
+            print(tip_dists)
+            print(tip_angles)
+            # if all([d >  for d in tip_dists]):
+            #     print("パー")
+            # elif all([d < 70 for d in tip_dists]):
+            #     print("グー")
+            # elif tip_dists[0] < 70 and tip_dists[1] > 75 and tip_dists[2] > 75 and tip_dists[3] < 70 and tip_dists[4] < 70:
+            #     print("チョキ")
+            # else:
+            #     print("それ以外")
 
             # log data for analysis
             self.log_hand_data(hand, finger_data)
