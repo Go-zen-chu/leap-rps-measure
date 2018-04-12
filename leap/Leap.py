@@ -4,10 +4,6 @@
 # Do not make changes to this file unless you know what you are doing--modify
 # the SWIG interface file instead.
 
-
-
-
-
 from sys import version_info
 if version_info >= (2, 6, 0):
     def swig_import_helper():
@@ -2288,5 +2284,3 @@ Listener_swigregister = LeapPython.Listener_swigregister
 Listener_swigregister(Listener)
 
 # This file is compatible with both classic and new-style classes.
-
-

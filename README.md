@@ -6,5 +6,9 @@ Leap Motion App for winning Rock-Paper-Scissors.
 Development is undergoing on MacOS HighSierra.
 
 ```
-python main.py
+# using virtualenv
+$ source env
+
+$ PYTHONPATH=env/lib/python2.7/site-packages /System/Library/Frameworks/Python.framework/Versions/Current/bin/pytho
+n main.py
 ```

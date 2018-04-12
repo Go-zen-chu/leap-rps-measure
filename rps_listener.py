@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 import sys
 sys.path.insert(0, "./leap") # load leap motion lib
-import thread
+import threading
 import time
 import math
 
@@ -10,12 +10,34 @@ import Leap
 from Leap import Vector
 from logging import getLogger, FileHandler, Formatter, DEBUG
 
+class HandData(object):
+    def __init__(self, palm_pos, palm_vector):
+        self.palm_pos = palm_pos
+        self.palm_vector = palm_vector
+
+class RpsThread(threading.Thread):
+    # init 時に渡さないと thread run してからは別のメモリ
+    def __init__(self, stack):
+        super(RpsThread, self).__init__()
+        self.name = "rps_thread"
+        self.listener = RpsListener()
+        self.listener.set_data_stack(stack)
+        self.controller = Leap.Controller()
+
+    def run(self):
+        print("start rps thread")
+        self.controller.add_listener(self.listener)
+
+    def join(self):
+        self.controller.remove_listener(self.listener)
+
 class RpsListener(Leap.Listener):
     finger_names = ['Thumb', 'Index', 'Middle', 'Ring', 'Pinky']
     bone_names = ['Metacarpal', 'Proximal', 'Intermediate', 'Distal']
     state_names = ['STATE_INVALID', 'STATE_START', 'STATE_UPDATE', 'STATE_END']
     origin = Vector(0,0,0)
     logger = None
+    stack = None
 
     def on_init(self, controller):
         print "Initialized"
@@ -48,6 +70,10 @@ class RpsListener(Leap.Listener):
 
     def on_exit(self, controller):
         print "Exited"
+
+    def set_data_stack(self, stack):
+            print("set stack")
+            self.stack = stack
 
     def log_hand_data(self, hand, finger_data):
         # fast array initializaion
@@ -84,7 +110,7 @@ class RpsListener(Leap.Listener):
     def on_frame(self, controller):
         # Get the most recent frame and report some basic information
         frame = controller.frame()
-
+        hand_center = Vector.zero
         # print "Frame id: %d, timestamp: %d, hands: %d, fingers: %d, tools: %d, gestures: %d" % (
         #       frame.id, frame.timestamp, len(frame.hands), len(frame.fingers), len(frame.tools), len(frame.gestures()))
 
@@ -143,6 +169,9 @@ class RpsListener(Leap.Listener):
             # log data for analysis
             self.log_hand_data(hand, finger_data)
 
+        if self.stack != None and hand_center != Vector.zero:
+            center_vec = (hand_center.x, hand_center.y, hand_center.z)
+            self.stack.put(center_vec)
         if not (frame.hands.is_empty and frame.gestures().is_empty):
             print ""
 
