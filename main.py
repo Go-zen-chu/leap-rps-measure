@@ -1,24 +1,30 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import sys, thread, time
+import sys
+import time
 sys.path.insert(0, "./leap") # load leap motion lib
-
 import Leap
 from rps_listener import RpsListener
+from rps_thread import RpsThread
 
 def main():
-    listener = RpsListener()
-    controller = Leap.Controller()
-    controller.add_listener(listener)
+    th = RpsThread()
+    th.start()
 
-    # Keep this process running until Enter is pressed
-    print "Press Enter to quit..."
-    try:
-        sys.stdin.readline()
-    except KeyboardInterrupt:
-        pass
-    finally:
-        controller.remove_listener(listener)
+    time.sleep(1)
+    print("さいしょは")
+    time.sleep(1)
+    print("グー")
+    time.sleep(1)
+    # 測定
+    th.start_measure()
+
+    print("じゃんけん")
+    time.sleep(1)
+    th.stop_measure()
+    print("ほい！")
+
+    th.join()
 
 if __name__ == "__main__":
     main()
