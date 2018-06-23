@@ -8,8 +8,9 @@ from rps_listener import RpsListener
 from rps_thread import RpsThread
 
 def main():
-    th = RpsThread()
-    th.start()
+    listener = RpsListener()
+    controller = Leap.Controller()
+    controller.add_listener(listener)
 
     time.sleep(1)
     print("さいしょは")
@@ -17,14 +18,16 @@ def main():
     print("グー")
     time.sleep(1)
     # 測定
-    th.start_measure()
+    listener.start_measure()
 
     print("じゃんけん")
     time.sleep(1)
-    th.stop_measure()
+    # 停止
+    listener.stop_measure()
+
     print("ほい！")
 
-    th.join()
+    controller.remove_listener(listener)
 
 if __name__ == "__main__":
     main()
