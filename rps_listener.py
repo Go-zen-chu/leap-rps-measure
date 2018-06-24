@@ -17,25 +17,13 @@ class RpsListener(Leap.Listener):
     xyz = ["x", "y", "z"]
     origin = Vector(0,0,0)
     logger = None
+    log_filename = ""
     header_len = 0
     is_measuring = False
     data_dir_path = ""
 
     def on_init(self, controller):
         print("Initialized")
-        now = datetime.now()
-        now_str = now.strftime("%Y%m%d-%H%M%S%f")
-        data_dir_path = os.path.abspath("data/{}".format(now_str))
-        os.makedirs(data_dir_path)
-        self.data_dir_path = data_dir_path
-
-        # initialize logger
-        self.logger = self.setup_logger()
-        data_header = self.create_data_header()
-        data_header_str = "\t".join(data_header)
-        self.header_len = len(data_header)
-        # write header of tsv
-        self.logger.info(data_header_str)
 
     def on_connect(self, controller):
         print("Connected")
@@ -47,11 +35,27 @@ class RpsListener(Leap.Listener):
     def on_exit(self, controller):
         print("Exited")
 
-    def setup_logger(self):
+    def init_logger(self, log_filename):
+        now = datetime.now()
+        now_str = now.strftime("%Y%m%d-%H%M%S%f")
+        data_dir_path = os.path.abspath("data/{}".format(now_str))
+        os.makedirs(data_dir_path)
+        self.data_dir_path = data_dir_path
+
+        self.log_filename = log_filename
+        # initialize logger
+        self.logger = self.setup_logger(self.data_dir_path, self.log_filename)
+        data_header = self.create_data_header()
+        data_header_str = "\t".join(data_header)
+        self.header_len = len(data_header)
+        # write header of tsv
+        self.logger.info(data_header_str)
+
+    def setup_logger(self, data_dir_path, log_filename, level=DEBUG):
         logger = getLogger(__name__)
-        logger.setLevel(DEBUG)
+        logger.setLevel(level)
         # create log in tsv
-        fh = FileHandler(filename="{}/{}.tsv".format(self.data_dir_path,__name__))
+        fh = FileHandler(filename="{}/{}.tsv".format(data_dir_path, log_filename))
         fm = Formatter("%(asctime)s\t%(message)s")
         fh.setLevel(DEBUG)
         fh.setFormatter(fm)

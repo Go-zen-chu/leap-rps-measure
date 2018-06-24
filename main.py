@@ -9,6 +9,7 @@ from rps_thread import RpsThread
 
 def main():
     listener = RpsListener()
+    listener.init_logger("gu")
     controller = Leap.Controller()
     controller.add_listener(listener)
 
