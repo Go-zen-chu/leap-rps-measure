@@ -8,16 +8,20 @@ from rps_listener import RpsListener
 from rps_thread import RpsThread
 
 def main():
+    num_args = len(sys.argv)
+    if num_args != 2:
+        sys.exit("Insufficient args. usage) main.py rock")
+    rps = sys.argv[1] # measuring rock, paper, or scissors
     listener = RpsListener()
-    listener.init_logger("gu")
+    listener.init_logger(rps)
     controller = Leap.Controller()
     controller.add_listener(listener)
 
     time.sleep(1)
     print("さいしょは")
-    time.sleep(1)
+    time.sleep(0.5)
     print("グー")
-    time.sleep(1)
+    time.sleep(0.5)
     # 測定
     listener.start_measure()
 
