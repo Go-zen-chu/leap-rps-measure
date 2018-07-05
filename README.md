@@ -1,10 +1,12 @@
-# leap-rps
+# leap-rps-measure
 
-Leap Motion App for winning Rock-Paper-Scissors.
+Data collector for training Rock-Paper-Scissors in leap motion.
 
 ## dev
 Development is undergoing on MacOS HighSierra.
 
+Run
 ```
-python main.py
+/usr/bin/python main.py
 ```
+to start collecting.
