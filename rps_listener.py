@@ -66,63 +66,26 @@ class RpsListener(Leap.Listener):
 
     def create_data_header(self):
         data_header = []
-        # hand_header = 7 + 3*3 = 16
-        hand_header = ["hand_type","hand_id","hand_confidence","palm_x","palm_y","palm_z","palm_width"]
-        for bs in ["x_basis", "y_basis", "z_basis"]:
-            hand_header.extend(["hand_{}_{}".format(bs, ax) for ax in self.xyz])
-        # finger_header = 5 * (2 + 3 + 3 + 4*3) = 100
-        finger_header = []
-        for f in self.finger_names:
-            # length and width are decided when your hand is first detected (static)
-            finger_header.extend(["{}_{}".format(f, t) for t in ["len", "width"]])
-            finger_header.extend(["{}_direction_{}".format(f, ax) for ax in self.xyz])
-            finger_header.extend(["{}_velocity_{}".format(f, ax) for ax in self.xyz])
-            # finger bones, all fingers contain 4 bones
-            for b in range(0, 4):
-                finger_header.extend(["{}_{}_center_{}".format(f, b, ax) for ax in self.xyz])
-        data_header.extend(hand_header)
-        data_header.extend(finger_header)
+        # hand_header = 5
+        data_header = ["hand_id", "hand_confidence"]
+        data_header.extend([fng + "_angle" for fng in self.finger_names])
         return data_header
 
     def get_hand_data(self, hand):
-        # fast array initializaion
-        d = [None] * self.header_len
-        d[0] = "L" if hand.is_left else "R"
-        d[1] = hand.id
-        d[2] = hand.confidence
-        pp = hand.palm_position
-        d[3] = pp.x
-        d[4] = pp.y
-        d[5] = pp.z
-        d[6] = hand.palm_width
-        idx = 7
-        basis = hand.basis
-        for bs in [basis.x_basis, basis.y_basis, basis.z_basis]:
-            for val in [bs.x, bs.y, bs.z]:
-                d[idx] = val
-                idx += 1
+        # heuristic way
+        hand_data = [None] * 7
+        hand_data[0] = hand.id
+        hand_data[1] = hand.confidence
+        idx = 2
+        hand_direction = hand.direction
+        palm_normal = hand.palm_normal
         for fng in hand.fingers:
-            d[idx] = fng.length
-            idx +=1
-            d[idx] = fng.width
-            idx +=1
-            fng_dir = fng.direction
-            fng_vel = fng.tip_velocity
-            for val in [fng_dir.x, fng_dir.y, fng_dir.z]:
-                d[idx] = val
-                idx += 1
-            for val in [fng_vel.x, fng_vel.y, fng_vel.z]:
-                d[idx] = val
-                idx += 1
-            for b in range(0, 4):
-                bn = fng.bone(b)
-                d[idx] = bn.center.x
-                idx += 1
-                d[idx] = bn.center.y
-                idx += 1
-                d[idx] = bn.center.z
-                idx += 1
-        return d
+            angle_hand_fng = hand_direction.angle_to(fng.direction) * 180 / math.pi
+            angle_norm_fng = palm_normal.angle_to(fng.direction) * 180 / math.pi
+            if angle_norm_fng > 90:
+                angle_hand_fng = angle_hand_fng * -1
+            hand_data[idx + fng.type] = angle_hand_fng
+        return hand_data
 
     def start_measure(self):
         self.is_measuring = True
